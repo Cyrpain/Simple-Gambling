@@ -1,6 +1,6 @@
 //pretty simple code really lol. It doesn't have any realistic propability system or counts cards
 //will improve on that in the fututre
-
+//you can make this a little bit nicer and more interesting deleting couple of values from 54 line
 
 import java.util.ArrayList;
 import java.util.Collections;
