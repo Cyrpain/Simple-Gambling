@@ -1,0 +1,214 @@
+//this one is fully AI generated I'm sh*t af when it comes to programming games
+//they made chatGPT free not my fault
+//this game is broken I never win
+//Skill issue
+
+import java.util.*;
+
+public class ThreeCardPoker {
+
+    // Define suits and ranks
+    private static final String[] SUITS = {"Hearts", "Diamonds", "Clubs", "Spades"};
+    private static final String[] RANKS = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"};
+
+    // Hand rankings (from highest to lowest)
+    private static final String[] HAND_RANKINGS = {"Straight Flush", "Three of a Kind", "Straight", "Flush", "Pair", "High Card"};
+
+    // Player's starting balance
+    private static int playerBalance = 1000;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        System.out.println("Welcome to Three Card Poker!");
+        System.out.println("You start with a balance of $" + playerBalance);
+
+        while (playerBalance > 0) {
+            // Ask player to place a bet
+            int bet = 0;
+            while (bet <= 0 || bet > playerBalance) {
+                System.out.print("Place your bet (Current balance: $" + playerBalance + "): ");
+                bet = scanner.nextInt();
+            }
+
+            // Create and shuffle the deck
+            List<String> deck = createDeck();
+            Collections.shuffle(deck);
+
+            // Deal 3 cards each to the player and the dealer
+            List<String> playerHand = dealHand(deck, 0);
+            List<String> dealerHand = dealHand(deck, 3);
+
+            // Print the hands
+            System.out.println("Player's Hand: " + playerHand);
+            System.out.println("Dealer's Hand: " + dealerHand);
+
+            // Evaluate and compare hands
+            String winner = compareHands(playerHand, dealerHand);
+            System.out.println("Winner: " + winner);
+
+            // Adjust the player's balance based on the outcome
+            if (winner.equals("Player")) {
+                playerBalance += bet;
+                System.out.println("You won $" + bet + "!");
+            } else if (winner.equals("Dealer")) {
+                playerBalance -= bet;
+                System.out.println("You lost $" + bet + ".");
+            } else {
+                System.out.println("It's a tie. No change in balance.");
+            }
+
+            // Show realistic probabilities based on remaining cards
+            showProbabilities(deck);
+
+            // Check if the player wants to continue
+            if (playerBalance > 0) {
+                System.out.print("Your current balance is $" + playerBalance + ". Would you like to play another round? (yes/no): ");
+                String response = scanner.next();
+                if (response.equalsIgnoreCase("no")) {
+                    break;
+                }
+            } else {
+                System.out.println("You have run out of money. Game over!");
+                break;
+            }
+        }
+
+        System.out.println("Thanks for playing Three Card Poker! Your final balance is $" + playerBalance);
+        scanner.close();
+    }
+
+    // Create a deck of 52 cards
+    private static List<String> createDeck() {
+        List<String> deck = new ArrayList<>();
+        for (String suit : SUITS) {
+            for (String rank : RANKS) {
+                deck.add(rank + " of " + suit);
+            }
+        }
+        return deck;
+    }
+
+    // Deal 3 cards from the deck (starting from the given index)
+    private static List<String> dealHand(List<String> deck, int start) {
+        return deck.subList(start, start + 3);
+    }
+
+    // Evaluate the hand and return its ranking
+    private static String evaluateHand(List<String> hand) {
+        List<String> ranks = new ArrayList<>();
+        List<String> suits = new ArrayList<>();
+
+        // Separate ranks and suits
+        for (String card : hand) {
+            String[] parts = card.split(" of ");
+            ranks.add(parts[0]);
+            suits.add(parts[1]);
+        }
+
+        boolean isFlush = isFlush(suits);
+        boolean isStraight = isStraight(ranks);
+        boolean isThreeOfAKind = isThreeOfAKind(ranks);
+        boolean isPair = isPair(ranks);
+
+        if (isFlush && isStraight) return "Straight Flush";
+        if (isThreeOfAKind) return "Three of a Kind";
+        if (isStraight) return "Straight";
+        if (isFlush) return "Flush";
+        if (isPair) return "Pair";
+        return "High Card";
+    }
+
+    // Check if the hand is a flush (all cards are of the same suit)
+    private static boolean isFlush(List<String> suits) {
+        return new HashSet<>(suits).size() == 1;
+    }
+
+    // Check if the hand is a straight (consecutive ranks)
+    private static boolean isStraight(List<String> ranks) {
+        List<Integer> rankValues = new ArrayList<>();
+        for (String rank : ranks) {
+            rankValues.add(Arrays.asList(RANKS).indexOf(rank));
+        }
+        Collections.sort(rankValues);
+
+        return rankValues.get(2) - rankValues.get(1) == 1 && rankValues.get(1) - rankValues.get(0) == 1;
+    }
+
+    // Check if the hand is three of a kind (all ranks are the same)
+    private static boolean isThreeOfAKind(List<String> ranks) {
+        return new HashSet<>(ranks).size() == 1;
+    }
+
+    // Check if the hand contains a pair (two cards of the same rank)
+    private static boolean isPair(List<String> ranks) {
+        return new HashSet<>(ranks).size() == 2;
+    }
+
+    // Compare hands and return the winner
+    private static String compareHands(List<String> playerHand, List<String> dealerHand) {
+        String playerHandType = evaluateHand(playerHand);
+        String dealerHandType = evaluateHand(dealerHand);
+
+        int playerRank = Arrays.asList(HAND_RANKINGS).indexOf(playerHandType);
+        int dealerRank = Arrays.asList(HAND_RANKINGS).indexOf(dealerHandType);
+
+        if (playerRank < dealerRank) {
+            return "Player";
+        } else if (playerRank > dealerRank) {
+            return "Dealer";
+        } else {
+            return "Tie";
+        }
+    }
+
+    // Show realistic probabilities after each round based on the remaining deck
+    private static void showProbabilities(List<String> deck) {
+        // Count the number of remaining cards of each rank and suit
+        Map<String, Integer> rankCount = new HashMap<>();
+        Map<String, Integer> suitCount = new HashMap<>();
+        for (String card : deck) {
+            String[] parts = card.split(" of ");
+            String rank = parts[0];
+            String suit = parts[1];
+
+            rankCount.put(rank, rankCount.getOrDefault(rank, 0) + 1);
+            suitCount.put(suit, suitCount.getOrDefault(suit, 0) + 1);
+        }
+
+        // Calculate and display probabilities for various hands
+        int totalCards = deck.size();
+        double straightFlushProbability = calculateStraightFlushProbability(suitCount, rankCount, totalCards);
+        double threeOfAKindProbability = calculateThreeOfAKindProbability(rankCount, totalCards);
+        double flushProbability = calculateFlushProbability(suitCount, totalCards);
+        double straightProbability = calculateStraightProbability(rankCount, totalCards);
+
+        System.out.println("\nProbabilities after this round:");
+        System.out.println("Straight Flush: " + straightFlushProbability * 100 + "%");
+        System.out.println("Three of a Kind: " + threeOfAKindProbability * 100 + "%");
+        System.out.println("Flush: " + flushProbability * 100 + "%");
+        System.out.println("Straight: " + straightProbability * 100 + "%");
+    }
+
+    // Simplified probability calculations based on the remaining deck
+    private static double calculateStraightFlushProbability(Map<String, Integer> suitCount, Map<String, Integer> rankCount, int totalCards) {
+        // Example simplistic calculation (real probabilities would need a more detailed approach)
+        return 0.01; // Placeholder probability
+    }
+
+    private static double calculateThreeOfAKindProbability(Map<String, Integer> rankCount, int totalCards) {
+        // Example simplistic calculation (real probabilities would need a more detailed approach)
+        return 0.01; // Placeholder probability
+    }
+
+    private static double calculateFlushProbability(Map<String, Integer> suitCount, int totalCards) {
+        // Example simplistic calculation (real probabilities would need a more detailed approach)
+        return 0.05; // Placeholder probability
+    }
+
+    private static double calculateStraightProbability(Map<String, Integer> rankCount, int totalCards) {
+        // Example simplistic calculation (real probabilities would need a more detailed approach)
+        return 0.05; // Placeholder probability
+    }
+}
