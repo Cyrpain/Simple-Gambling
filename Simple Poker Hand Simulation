@@ -1,3 +1,7 @@
+//pretty simple code really lol. It doesn't have any realistic propability system or counts cards
+//will improve on that in the fututre
+
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
