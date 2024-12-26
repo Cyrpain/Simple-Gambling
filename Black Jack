@@ -1,0 +1,89 @@
+import java.util.*;
+public class BlackJack {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        System.out.println("Welcome to Blackjack!");
+
+        // Deck of cards (values from 2 to 11)
+        int[] deck = {2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11};
+
+        // Player's and dealer's hands
+        List<Integer> playerHand = new ArrayList<>();
+        List<Integer> dealerHand = new ArrayList<>();
+
+        // Drawing two cards for the player and the dealer
+        playerHand.add(drawCard(deck, random));
+        playerHand.add(drawCard(deck, random));
+        dealerHand.add(drawCard(deck, random));
+        dealerHand.add(drawCard(deck, random));
+
+        // Player's turn
+        while (true) {
+            System.out.println("Your cards: " + playerHand + " (sum: " + calculateSum(playerHand) + ")");
+            System.out.println("Dealer's card: " + dealerHand.get(0));
+
+            if (calculateSum(playerHand) > 21) {
+                System.out.println("You exceeded 21. You lose!");
+                return;
+            }
+
+            System.out.println("Do you want to draw another card? (yes/no)");
+            String choice = scanner.nextLine().toLowerCase();
+
+            if (choice.equals("yes")) {
+                playerHand.add(drawCard(deck, random));
+            } else {
+                break;
+            }
+        }
+
+        // Dealer's turn
+        while (calculateSum(dealerHand) < 17) {
+            dealerHand.add(drawCard(deck, random));
+        }
+
+        // Displaying results
+        System.out.println("Your cards: " + playerHand + " (sum: " + calculateSum(playerHand) + ")");
+        System.out.println("Dealer's cards: " + dealerHand + " (sum: " + calculateSum(dealerHand) + ")");
+
+        int playerSum = calculateSum(playerHand);
+        int dealerSum = calculateSum(dealerHand);
+
+        if (dealerSum > 21 || playerSum > dealerSum) {
+            System.out.println("You win!");
+        } else if (playerSum == dealerSum) {
+            System.out.println("It's a tie!");
+        } else {
+            System.out.println("You lose!");
+        }
+    }
+
+    // Function to draw a card from the deck
+    private static int drawCard(int[] deck, Random random) {
+        return deck[random.nextInt(deck.length)];
+    }
+
+    // Function to calculate the sum of cards in hand
+    private static int calculateSum(List<Integer> hand) {
+        int sum = 0;
+        int aceCount = 0;
+
+        for (int card : hand) {
+            sum += card;
+            if (card == 11) {
+                aceCount++;
+            }
+        }
+
+        // Adjust the value of an ace to 1 if the sum exceeds 21
+        while (sum > 21 && aceCount > 0) {
+            sum -= 10;
+            aceCount--;
+        }
+
+        return sum;
+    }
+}
