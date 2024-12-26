@@ -1,0 +1,191 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+// Simple program to simulate a Texas Hold'em hand
+public class PokerHoldem {
+
+    // Class representing a card
+    static class Card {
+        private final String rank;
+        private final String suit;
+
+        public Card(String rank, String suit) {
+            this.rank = rank;
+            this.suit = suit;
+        }
+
+        public String getRank() {
+            return rank;
+        }
+
+        public String getSuit() {
+            return suit;
+        }
+
+        @Override
+        public String toString() {
+            return rank + " of " + suit;
+        }
+
+        // Convert rank to value for comparison
+        public int getRankValue() {
+            switch (rank) {
+                case "Jack": return 11;
+                case "Queen": return 12;
+                case "King": return 13;
+                case "Ace": return 14;
+                default: return Integer.parseInt(rank);
+            }
+        }
+    }
+
+    // Class representing a deck of cards
+    static class Deck {
+        private final List<Card> cards = new ArrayList<>();
+
+        public Deck() {
+            String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"};
+            String[] suits = {"Hearts", "Diamonds", "Clubs", "Spades"};
+
+            for (String suit : suits) {
+                for (String rank : ranks) {
+                    cards.add(new Card(rank, suit));
+                }
+            }
+
+            shuffle();
+        }
+
+        public void shuffle() {
+            Collections.shuffle(cards);
+        }
+
+        public Card deal() {
+            return cards.remove(0);
+        }
+    }
+
+    // Function to evaluate the best hand from a list of 7 cards
+    public static String evaluateHand(List<Card> hand) {
+        // Sort the hand by rank values
+        hand.sort((card1, card2) -> Integer.compare(card2.getRankValue(), card1.getRankValue()));
+
+        // Check for flush (same suit)
+        boolean isFlush = hand.stream().allMatch(card -> card.getSuit().equals(hand.get(0).getSuit()));
+
+        // Check for straight (consecutive ranks)
+        boolean isStraight = true;
+        for (int i = 1; i < hand.size(); i++) {
+            if (hand.get(i).getRankValue() != hand.get(i - 1).getRankValue() - 1) {
+                isStraight = false;
+                break;
+            }
+        }
+
+        // If we have a flush and a straight, check for straight flush
+        if (isFlush && isStraight) {
+            return "Straight Flush";
+        }
+
+        // Check for four of a kind, three of a kind, and pairs
+        Map<Integer, Integer> rankCount = new HashMap<>();
+        for (Card card : hand) {
+            int rankValue = card.getRankValue();
+            rankCount.put(rankValue, rankCount.getOrDefault(rankValue, 0) + 1);
+        }
+
+        // Check for Four of a Kind
+        if (rankCount.containsValue(4)) {
+            return "Four of a Kind";
+        }
+
+        // Check for Full House (three of a kind + pair)
+        if (rankCount.containsValue(3) && rankCount.containsValue(2)) {
+            return "Full House";
+        }
+
+        // Check for flush
+        if (isFlush) {
+            return "Flush";
+        }
+
+        // Check for Straight
+        if (isStraight) {
+            return "Straight";
+        }
+
+        // Check for Three of a Kind
+        if (rankCount.containsValue(3)) {
+            return "Three of a Kind";
+        }
+
+        // Check for Two Pair
+        if (rankCount.containsValue(2)) {
+            int pairCount = 0;
+            for (int count : rankCount.values()) {
+                if (count == 2) pairCount++;
+            }
+            if (pairCount == 2) {
+                return "Two Pair";
+            }
+        }
+
+        // Check for One Pair
+        if (rankCount.containsValue(2)) {
+            return "One Pair";
+        }
+
+        // If no other combination, it's a High Card
+        return "High Card";
+    }
+
+    public static void main(String[] args) {
+        Deck deck = new Deck();
+
+        // Deal two cards to two players
+        List<Card> player1Hand = new ArrayList<>();
+        List<Card> player2Hand = new ArrayList<>();
+
+        for (int i = 0; i < 2; i++) {
+            player1Hand.add(deck.deal());
+            player2Hand.add(deck.deal());
+        }
+
+        // Deal five community cards (flop, turn, river)
+        List<Card> communityCards = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            communityCards.add(deck.deal());
+        }
+
+        // Combine player's hands with community cards to form the best hand
+        List<Card> player1BestHand = new ArrayList<>(player1Hand);
+        player1BestHand.addAll(communityCards);
+        List<Card> player2BestHand = new ArrayList<>(player2Hand);
+        player2BestHand.addAll(communityCards);
+
+        // Evaluate hands
+        String player1BestHandEvaluation = evaluateHand(player1BestHand);
+        String player2BestHandEvaluation = evaluateHand(player2BestHand);
+
+        // Display hands and their evaluations
+        System.out.println("Player 1's hand:");
+        for (Card card : player1Hand) {
+            System.out.println(card);
+        }
+        System.out.println("Player 1's best hand: " + player1BestHandEvaluation);
+
+        System.out.println("\nPlayer 2's hand:");
+        for (Card card : player2Hand) {
+            System.out.println(card);
+        }
+        System.out.println("Player 2's best hand: " + player2BestHandEvaluation);
+
+        System.out.println("\nCommunity cards:");
+        for (Card card : communityCards) {
+            System.out.println(card);
+        }
+    }
+}
