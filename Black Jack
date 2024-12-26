@@ -1,64 +1,174 @@
+//chatGPT is never getting rest 
+//at some point I just stopped following
+
+
 import java.util.*;
+
 public class BlackJack {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         Random random = new Random();
+        int wallet = 1000;  // Starting money
+        int roundsPlayed = 0;
+        int wins = 0;
+        int losses = 0;
 
-        System.out.println("Welcome to Blackjack!");
+        printCentered("Welcome to Blackjack!");
 
-        // Deck of cards (values from 2 to 11)
-        int[] deck = {2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11};
+        // Loop for multiple rounds
+        while (wallet > 0) {
+            // Clear screen and display only round and wallet balance
+            clearScreen();
+            printCentered("Round " + (roundsPlayed + 1) + " | Your current wallet: $" + wallet);
+            printLine();
 
-        // Player's and dealer's hands
-        List<Integer> playerHand = new ArrayList<>();
-        List<Integer> dealerHand = new ArrayList<>();
+            // Player's bet
+            int bet = getBet(scanner, wallet);
 
-        // Drawing two cards for the player and the dealer
-        playerHand.add(drawCard(deck, random));
-        playerHand.add(drawCard(deck, random));
-        dealerHand.add(drawCard(deck, random));
-        dealerHand.add(drawCard(deck, random));
+            // Deck of cards (values from 2 to 11)
+            int[] deck = {2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11};
 
-        // Player's turn
-        while (true) {
-            System.out.println("Your cards: " + playerHand + " (sum: " + calculateSum(playerHand) + ")");
-            System.out.println("Dealer's card: " + dealerHand.get(0));
+            // Player's and dealer's hands
+            List<Integer> playerHand = new ArrayList<>();
+            List<Integer> dealerHand = new ArrayList<>();
 
-            if (calculateSum(playerHand) > 21) {
-                System.out.println("You exceeded 21. You lose!");
-                return;
+            // Drawing two cards for the player and the dealer
+            playerHand.add(drawCard(deck, random));
+            playerHand.add(drawCard(deck, random));
+            dealerHand.add(drawCard(deck, random));
+            dealerHand.add(drawCard(deck, random));
+
+            // Player's turn
+            boolean doubled = false;  // Track if the player has doubled their bet
+            int originalBet = bet;  // Store the original bet to calculate win/loss later
+
+            while (true) {
+                // Clear screen and display only round and wallet balance
+                clearScreen();
+                printCentered("Round " + (roundsPlayed + 1) + " | Your current wallet: $" + wallet);
+                printLine();
+
+                printCentered("Your cards: " + playerHand + " (sum: " + calculateSum(playerHand) + ")");
+                printCentered("Dealer's card: " + dealerHand.get(0));
+                printLine();
+
+                if (calculateSum(playerHand) > 21) {
+                    printCentered("You exceeded 21. You lose!");
+                    wallet -= bet;  // Deduct the bet from the wallet
+                    losses++;
+                    break;
+                }
+
+                printCentered("Do you want to:");
+                printCentered("(1) Draw another card");
+                printCentered("(2) Double your bet");
+                printCentered("(3) Stop");
+                printLine();
+
+                String choice = scanner.nextLine().toLowerCase();
+
+                if (choice.equals("1")) {
+                    playerHand.add(drawCard(deck, random));
+                } else if (choice.equals("2") && !doubled) {
+                    if (wallet >= bet) {  // Check if player has enough funds to double the bet
+                        bet *= 2;  // Double the bet
+                        printCentered("You have doubled your bet to $" + bet + ". You will receive one more card.");
+                        playerHand.add(drawCard(deck, random));  // Draw only one card
+                        doubled = true;  // Player cannot double again
+                        break;  // Stop player from drawing more cards after doubling
+                    } else {
+                        printCentered("You do not have enough money to double your bet.");
+                    }
+                } else if (choice.equals("3")) {
+                    break;
+                } else {
+                    printCentered("Invalid choice. Please choose again.");
+                }
             }
 
-            System.out.println("Do you want to draw another card? (yes/no)");
-            String choice = scanner.nextLine().toLowerCase();
+            if (calculateSum(playerHand) <= 21) {
+                // Dealer's turn
+                while (calculateSum(dealerHand) < 17) {
+                    dealerHand.add(drawCard(deck, random));
+                }
 
-            if (choice.equals("yes")) {
-                playerHand.add(drawCard(deck, random));
-            } else {
+                // Displaying results
+                clearScreen();
+                printCentered("Round " + (roundsPlayed + 1) + " | Your current wallet: $" + wallet);
+                printLine();
+
+                printCentered("Your cards: " + playerHand + " (sum: " + calculateSum(playerHand) + ")");
+                printCentered("Dealer's cards: " + dealerHand + " (sum: " + calculateSum(dealerHand) + ")");
+                printLine();
+
+                int playerSum = calculateSum(playerHand);
+                int dealerSum = calculateSum(dealerHand);
+
+                if (dealerSum > 21 || playerSum > dealerSum) {
+                    printCentered("You win!");
+                    wallet += bet;  // Add the bet to the wallet (including doubled amount)
+                    wins++;
+                    printCentered("You earned $" + (bet - originalBet)); // Money earned (including the doubled bet)
+                } else if (playerSum == dealerSum) {
+                    printCentered("It's a tie!");
+                    printCentered("No change in your wallet.");
+                } else {
+                    printCentered("You lose!");
+                    wallet -= bet;  // Deduct the bet from the wallet
+                    losses++;
+                    printCentered("You lost $" + bet);  // Money lost
+                }
+            }
+
+            roundsPlayed++;
+
+            // Check if the player still has money to play
+            if (wallet <= 0) {
+                printCentered("You're out of money. Game over!");
+                break;
+            }
+
+            // Ask if the player wants to play another round
+            clearScreen();
+            printCentered("Round " + (roundsPlayed + 1) + " | Your current wallet: $" + wallet);
+            printLine();
+
+            printCentered("Do you want to play another round? (yes/no)");
+            String playAgain = scanner.nextLine().toLowerCase();
+
+            if (!playAgain.equals("yes")) {
                 break;
             }
         }
 
-        // Dealer's turn
-        while (calculateSum(dealerHand) < 17) {
-            dealerHand.add(drawCard(deck, random));
+        // Final statistics
+        clearScreen();
+        printCentered("Game Over!");
+        printCentered("Total rounds played: " + roundsPlayed);
+        printCentered("Total wins: " + wins);
+        printCentered("Total losses: " + losses);
+        printCentered("Final wallet balance: $" + wallet);
+        printLine();
+    }
+
+    // Function to get the bet amount
+    private static int getBet(Scanner scanner, int wallet) {
+        int bet = 0;
+        while (true) {
+            printCentered("Enter your bet (Current wallet: $" + wallet + "): ");
+            bet = scanner.nextInt();
+            scanner.nextLine();  // Consume the newline character
+
+            if (bet <= 0) {
+                printCentered("Bet must be greater than 0.");
+            } else if (bet > wallet) {
+                printCentered("You cannot bet more than your current wallet balance.");
+            } else {
+                break;
+            }
         }
-
-        // Displaying results
-        System.out.println("Your cards: " + playerHand + " (sum: " + calculateSum(playerHand) + ")");
-        System.out.println("Dealer's cards: " + dealerHand + " (sum: " + calculateSum(dealerHand) + ")");
-
-        int playerSum = calculateSum(playerHand);
-        int dealerSum = calculateSum(dealerHand);
-
-        if (dealerSum > 21 || playerSum > dealerSum) {
-            System.out.println("You win!");
-        } else if (playerSum == dealerSum) {
-            System.out.println("It's a tie!");
-        } else {
-            System.out.println("You lose!");
-        }
+        return bet;
     }
 
     // Function to draw a card from the deck
@@ -85,5 +195,26 @@ public class BlackJack {
         }
 
         return sum;
+    }
+
+    // Function to print a separator line for clarity
+    private static void printLine() {
+        System.out.println("----------------------------------------------");
+    }
+
+    // Function to clear the console screen
+    private static void clearScreen() {
+        // Print several newlines to simulate clearing the screen
+        for (int i = 0; i < 15; i++) {
+            System.out.println();
+        }
+    }
+
+    // Function to print text centered
+    private static void printCentered(String text) {
+        int terminalWidth = 80; // Assuming a standard terminal width
+        int padding = (terminalWidth - text.length()) / 2;
+        String paddedText = " ".repeat(padding) + text;
+        System.out.println(paddedText);
     }
 }
